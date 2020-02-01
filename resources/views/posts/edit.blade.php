@@ -19,6 +19,10 @@
                 <span class="text-danger">{{ $errors->first('body') }}</span>
             @endif
         </div>
+        <img width="100%" src="{{ asset('storage/cover_image/')."/".$post->cover_image }}">
+        <div class="form-group">
+			<input type="file" name="cover_image" class="form-control" placeholder="Please upload a logo">
+		</div>
         <div class="form-group">
             <input type="submit" value="submit" class="btn btn-primary">
         </div>

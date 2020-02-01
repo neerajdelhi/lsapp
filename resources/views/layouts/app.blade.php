@@ -33,6 +33,6 @@
 <script src="{{route('index')}}/vendor/unisharp/laravel-ckeditor/ckeditor.js"></script>
     <script>
         CKEDITOR.replace( 'article-ckeditor' );
-<script>
+    <script>
 </body>
 </html>

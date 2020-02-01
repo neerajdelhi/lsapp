@@ -5,9 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Post;
 use DB;
+use Illuminate\Support\Facades\Storage;
 
 class PostsController extends Controller
 {
+        /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('auth',['except'=> ['index','show']]);
+    }
     /**
      * Display a listing of the resource.
      *
@@ -42,13 +52,24 @@ class PostsController extends Controller
        // return $request->all();
         $validateData = $request->validate([
             'title' => ['required','max:60','regex:/(^[a-zA-Z ]+$)/i'],
-            'body'  => ['required']
+            'body'  => ['required'],
+            'cover_image' => ['image','nullable','max:1999']
         ]);
-    
+        if($request->hasFile('cover_image')){
+            $fileNameWthExt = $request->file('cover_image')->getClientOriginalName();
+            $fileExt = $request->file('cover_image')->getClientOriginalExtension();
+            $filename = basename($fileNameWthExt,$fileExt); 
+            $fileNameToStore = $filename."_".time().".".$fileExt;
+            $path = $request->file('cover_image')->storeAs('public/cover_image',$fileNameToStore);
+        }else{
+            $fileNameToStore = "no_image.gif";
+        }
         $post = new Post;
         $post->title = $request->title;
         $post->body = $request->body;
         $post->user_id = auth()->user()->id;
+        $post->cover_image = $fileNameToStore;
+
         if($post->save()){
             return redirect('/posts')->with('success','Post created');
         }else{
@@ -77,6 +98,11 @@ class PostsController extends Controller
     public function edit($id)
     {
         $post = Post::find($id);
+
+        //check for correct user
+        if(auth()->user()->id !== $post->user_id){
+            redirect('/');
+        }
         return view('posts.edit',compact('post',$post));
     }
 
@@ -93,11 +119,23 @@ class PostsController extends Controller
             'title' => ['required','max:60','regex:/(^[a-zA-Z ]+$)/i'],
             'body'  => ['required']
         ]);
-    
+
         $editpost = Post::find($id);
+        
+        if($request->hasFile('cover_image')){
+            $fileNameWthExt = $request->file('cover_image')->getClientOriginalName();
+            $fileExt = $request->file('cover_image')->getClientOriginalExtension();
+            $filename = basename($fileNameWthExt,$fileExt);
+            $fileNameToStore = $filename."_".time().".".$fileExt;
+            Storage::delete('public/cover_image/'.$editpost->cover_image);
+            $path = $request->file('cover_image')->storeAs('public/cover_image',$fileNameToStore);
+        }else{
+            $fileNameToStore = "no_image.gif";
+        }
         $editpost->title = $request->title;
         $editpost->body = $request->body;
         $editpost->user_id = auth()->user()->id;
+        $editpost->cover_image = $fileNameToStore;
 
         if($editpost->save()){
             return redirect('/posts')->with('success','Post Editted successfully!!');   
@@ -115,6 +153,15 @@ class PostsController extends Controller
     public function destroy($id)
     {
         $post = Post::find($id);
+
+         //check for correct user
+         if(auth()->user()->id !== $post->user_id){
+            redirect('/');
+        }
+        if($post->cover_image != 'no_image.gif'){
+            //Storage::delete('public/cover_image/'.$editpost->cover_image);
+            Storage::delete('public/cover_image/'.$post->cover_image);
+        }
         if($post->delete()){
             return redirect('/posts')->with('success','Post Deleted successfully!!');   
         }else{

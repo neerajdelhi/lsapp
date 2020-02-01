@@ -19,6 +19,13 @@
             @endif
         </div>
         <div class="form-group">
+            <label for="cover_image">Cover Image</label>
+            <input type="file" name="cover_image" id="cover_image">
+            @if($errors ->has('cover_image'))
+                <span class="text-danger">{{ $errors->first('cover_image') }}</span>
+            @endif
+        </div>
+        <div class="form-group">
             <input type="submit" value="submit" class="btn btn-primary">
         </div>
     </form>
